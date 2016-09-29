@@ -1,0 +1,40 @@
+  model {
+    # Time-varying needs a prior for each parameter (each timestep)
+    for(t in 1:(nocc-1)) {
+    
+      # priors
+      b0.phi[t] ~ dnorm( 0, 0.001 )T(-10,10)
+      b0.p[t] ~ dnorm( 0, 0.001 )T(-10,10)
+    
+      # Transform parameters to 0-1 scale
+      logit(mean.phi[t]) <- b0.phi[t]
+      logit(mean.p[t]) <- b0.p[t]
+    }
+    
+    # Here we have to get everything into [i, j] indexing so it will fit into
+    #   the likelihood below
+    # only difference between constant model and here is t indexing on mean.phi[t]
+    for( i in 1:nind ){
+      for( t in f[i]:(nocc-1) ){
+        phi[i, t] <- mean.phi[t]
+        p[i, t] <- mean.p[t]
+      }
+    }
+    
+    # likelihood 
+    ### Don't need to change anything in here, because it's already written by time
+    for( i in 1:nind ){
+      z[i, f[i]] <- 1
+      for( t in (f[i] + 1):nocc ){
+      
+        # state
+        z[i,t] ~ dbern( mu1[i,t] )
+        mu1[i,t] <- phi[i, t-1] * z[i,t-1]
+      
+        # observation
+        y[i,t] ~ dbern( mu2[i,t] )
+        mu2[i,t] <- p[i,t-1] * z[i,t]
+      }
+    }
+  
+  }

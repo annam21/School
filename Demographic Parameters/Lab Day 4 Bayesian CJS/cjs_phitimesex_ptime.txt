@@ -1,0 +1,44 @@
+  model {
+    # priors
+    # This one's new
+    b1.sex ~ dnorm(0, 0.001)T(-10, 10)
+      
+    # These ones vary by time
+    for(t in 1:(nocc-1)) {
+      b0.phi[t] ~ dnorm( 0, 0.001 )T(-10,10)
+      b0.p[t] ~ dnorm( 0, 0.001 )T(-10,10)
+    }
+    
+    # Transform parameters with GLM
+    for( i in 1:nind ){
+      for(t in f[i]:(nocc-1)) {
+        logit(mean.phi[i, t]) <- b0.phi[t] + b1.sex*male[i] 
+        logit(mean.p[i, t]) <- b0.p[t]
+      }
+    }
+    
+    # Get everything into [i, j] indexing 
+    for( i in 1:nind ){
+      for(t in f[i]:(nocc-1)) {
+        phi[i, t] <- mean.phi[i, t]
+        p[i, t] <- mean.p[i, t]
+      }
+    }
+    
+    # likelihood 
+    ### Don't need to change anything in here, because it's already written by time
+    for( i in 1:nind ){
+      z[i, f[i]] <- 1
+      for( t in (f[i] + 1):nocc ){
+      
+        # state
+        z[i,t] ~ dbern( mu1[i,t] )
+        mu1[i,t] <- phi[i, t-1] * z[i,t-1]
+      
+        # observation
+        y[i,t] ~ dbern( mu2[i,t] )
+        mu2[i,t] <- p[i,t-1] * z[i,t]
+      }
+    }
+  
+  }

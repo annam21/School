@@ -5,12 +5,14 @@
   # Start with RMark
   library(RMark)
   
+  # You have to specify a working directory the the stinking tmp files to go in
+  setwd("GitHub/School/Demographic Parameters/Lab Day 5")
+  
   # Define what the groups are
   groups <- data.frame(treatment = c("treatment", "control")) 
   
   # Read in inp and convert to data.frame
-  clam <- convert.inp("GitHub/School/Demographic Parameters/Lab Day 5/clams.inp", 
-                      group.df = groups, covariates = NULL, use.comments = F)
+  clam <- convert.inp("clams.inp", group.df = groups, covariates = NULL, use.comments = F)
   
   # Process data (turn into a list)
   clam.proc <- process.data(clam, model = "CJS", groups = "treatment")

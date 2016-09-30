@@ -64,14 +64,14 @@
   cjs.params <- c("b0.phi", "b0.p", "mean.phi", "mean.p")
   
   # MCMC specifications
-  ni <- 5000
+  ni <- 500
   nt <- 1
-  nb <- 500
+  nb <- 50
   nc <- 1
   
   # run constant model in JAGS
   # logit(phi) = B0
-  phidot_pdot_res <- jags( cjs.data, 
+  phidot_pdot_clam <- jags(cjs.data, 
                            cjs.inits,
                            cjs.params,
                            "GitHub/School/Demographic Parameters/Lab Day 4 Bayesian CJS/cjs_phidot_pdot.txt",
@@ -82,5 +82,10 @@
   )
   
   # Look at results
-  phidot_pdot_res
-  mcmcplot(phidot_pdot_res)
+  phidot_pdot_clam
+  mcmcplot(phidot_pdot_clam)
+  
+  # Save it because it took awhile to run
+  save(phidot_pdot_clam, file = "GitHub/School/Demographic Parameters/Lab Day 5/Model Output/phidot_pdot_clam.RData")
+  load("GitHub/School/Demographic Parameters/Lab Day 5/Model Output/phidot_pdot_clam.RData")
+  

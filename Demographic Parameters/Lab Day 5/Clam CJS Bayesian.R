@@ -11,8 +11,8 @@
   # Prepare data
   
   # read data file 
-  clam <- read.csv("GitHub/School/Demographic Parameters/Lab Day 5/clam_data.csv" )
-  
+  clam <- read.csv("GitHub/School/Demographic Parameters/Lab Day 5/clam_data.csv")
+
   # Subset data to make encounter history matrix
   EH <- as.matrix(clam[, 1:9])
   
@@ -88,4 +88,343 @@
   # Save it because it took awhile to run
   save(phidot_pdot_clam, file = "GitHub/School/Demographic Parameters/Lab Day 5/Model Output/phidot_pdot_clam.RData")
   load("GitHub/School/Demographic Parameters/Lab Day 5/Model Output/phidot_pdot_clam.RData")
+  
+  
+################################
+# Run phidot.ptime
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b0.p = runif((nYears-1), -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  cjs.params <- c("b0.phi", "b0.p", "mean.phi", "mean.p")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phidot_ptime_clam <- jags(cjs.data, 
+                           cjs.inits,
+                           cjs.params,
+                           "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phidot_ptime.txt",
+                           n.chains=nc, 
+                           n.iter=ni, 
+                           n.burnin=nb,
+                           n.thin=nt
+  )
+  
+  # Look at results
+  phidot_ptime_clam
+
+#########################
+# Run phidot.pTime
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b0.p = runif(1, -3, 3),
+      b1.slope.p = runif(1, -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  cjs.params <- c("b0.phi", "mean.phi", "b0.p", "b1.slope.p")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phidot_pTime_clam <- jags(cjs.data, 
+                            cjs.inits,
+                            cjs.params,
+                            "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phidot_plinTime.txt",
+                            n.chains=nc, 
+                            n.iter=ni, 
+                            n.burnin=nb,
+                            n.thin=nt
+  )
+  
+  # Look at results
+  phidot_pTime_clam
+  
+################################
+# Run phiacute.pdot
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears, trt = clam$trt)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b0.p = runif(1, -3, 3),
+      b.acute.phi = runif(1, -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  ### Remove mean.phi because there is now one for every individual and time
+  cjs.params <- c("b0.phi", "b0.p", "mean.p", "b.acute.phi")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phiacute_pdot_clam <- jags(cjs.data, 
+                           cjs.inits,
+                           cjs.params,
+                           "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phiacute_pdot.txt",
+                           n.chains=nc, 
+                           n.iter=ni, 
+                           n.burnin=nb,
+                           n.thin=nt
+  )
+  
+  # Look at results
+  phiacute_pdot_clam
+  
+################################
+# Run phiacute.ptime
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears, trt = clam$trt)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b0.p = runif((nYears - 1), -3, 3),
+      b.acute.phi = runif(1, -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  ### Remove mean.phi because there is now one for every individual and time
+  cjs.params <- c("b0.phi", "b0.p", "b.acute.phi")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phiacute_ptime_clam <- jags(cjs.data, 
+                             cjs.inits,
+                             cjs.params,
+                             "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phiacute_ptime.txt",
+                             n.chains=nc, 
+                             n.iter=ni, 
+                             n.burnin=nb,
+                             n.thin=nt
+  )
+  
+  # Look at results
+  phiacute_ptime_clam
+  
+################################
+# Run phiacute.pTime
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears, trt = clam$trt)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b.acute.phi = runif(1, -3, 3),
+      b0.p = runif(1, -3, 3),
+      b1.slope.p = runif(1, -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  ### Remove mean.phi because there is now one for every individual and time
+  cjs.params <- c("b0.phi", "b.acute.phi", "b0.p", "b1.slope.p")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phiacute_pTime_clam <- jags(cjs.data, 
+                             cjs.inits,
+                             cjs.params,
+                             "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phiacute_plinTime.txt",
+                             n.chains=nc, 
+                             n.iter=ni, 
+                             n.burnin=nb,
+                             n.thin=nt
+  )
+  
+  # Look at results
+  phiacute_pTime_clam
+  
+################################
+# Run phichronic.pdot
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears, trt = clam$trt)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b0.p = runif(1, -3, 3),
+      b.chronic.phi = runif(1, -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  ### Remove mean.phi because there is now one for every individual and time
+  cjs.params <- c("b0.phi", "b0.p", "mean.p", "b.chronic.phi")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phichronic_pdot_clam <- jags(cjs.data, 
+                             cjs.inits,
+                             cjs.params,
+                             "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phichronic_pdot.txt",
+                             n.chains=nc, 
+                             n.iter=ni, 
+                             n.burnin=nb,
+                             n.thin=nt
+  )
+  
+  # Look at results
+  phichronic_pdot_clam
+  
+################################
+# Run phichronic.ptime
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears, trt = clam$trt)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b0.p = runif((nYears - 1), -3, 3),
+      b.chronic.phi = runif(1, -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  ### Remove mean.phi because there is now one for every individual and time
+  cjs.params <- c("b0.phi", "b0.p", "b.chronic.phi")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phichronic_ptime_clam <- jags(cjs.data, 
+                              cjs.inits,
+                              cjs.params,
+                              "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phichronic_ptime.txt",
+                              n.chains=nc, 
+                              n.iter=ni, 
+                              n.burnin=nb,
+                              n.thin=nt
+  )
+  
+  # Look at results
+  phichronic_ptime_clam
+  
+################################
+# Run phichronic.pTime
+  
+  # Define a list of data to be passed to JAGS
+  cjs.data <- list(y = EH, f = first, nind = nAnimal, nocc = nYears, trt = clam$trt)
+  
+  # Specify initial values to feed to JAGS
+  cjs.inits <- function(){
+    list(
+      z = z.init.fn(EH, first),
+      b0.phi = runif(1, -3, 3),
+      b.chronic.phi = runif(1, -3, 3),
+      b0.p = runif(1, -3, 3),
+      b1.slope.p = runif(1, -3, 3)
+    )
+  }
+  
+  # Parameters to monitor in JAGS
+  ### Remove mean.phi because there is now one for every individual and time
+  cjs.params <- c("b0.phi", "b.chronic.phi", "b0.p", "b1.slope.p")
+  
+  # MCMC specifications
+  ni <- 500
+  nt <- 1
+  nb <- 50
+  nc <- 1
+  
+  # run constant model in JAGS
+  # logit(phi) = B0
+  phichronic_pTime_clam <- jags(cjs.data, 
+                              cjs.inits,
+                              cjs.params,
+                              "GitHub/School/Demographic Parameters/Lab Day 5/JAGS Models/cjs_phichronic_plinTime.txt",
+                              n.chains=nc, 
+                              n.iter=ni, 
+                              n.burnin=nb,
+                              n.thin=nt
+  )
+  
+  # Look at results
+  phichronic_pTime_clam
+  
+#################################
+  # Compare models
+  # models <- c("phidot_pdot_clam", "phidot_ptime_clam", "phidot_pTime_clam",
+  #             "phiacute_pdot_clam", "phiacute_ptime_clam", "phiacute_pTime_clam",
+  #             "phichronic_pdot_clam", "phichronic_ptime_clam", "phichronic_pTime_clam")
+  # 
+  source("GitHub/School/Demographic Parameters/Lab Day 5/jags_comp_fn.R")
+  jags_comp_fn()
+  
+  # compute CRIs, etc. 
   

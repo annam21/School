@@ -43,7 +43,7 @@
   run.clam <- function() {
     clam.phidot.pdot <- mark(clam.proc, clam.ddl,
                              model.parameters = list(Phi = phidot, p = pdot),
-                             delete = T, output = F)
+                             delete = F, output = T)
     clam.phiacute.pdot <- mark(clam.proc, clam.ddl,
                                model.parameters = list(Phi = phiacute, p = pdot),
                                delete = T, output = F)

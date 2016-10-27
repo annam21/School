@@ -1,0 +1,29 @@
+
+  model {
+    # priors
+    b0.psi ~ dnorm( 0, 0.001 )T(-10,10)
+    b0.p ~ dnorm( 0, 0.001 )T(-10,10)
+    
+    logit(mean.psi) <- b0.psi
+    logit(mean.p) <- b0.p
+    
+    for( i in 1:nSite ){
+      psi[i] <- mean.psi
+      for( t in 1:nOcc ){
+        p[i,t] <- mean.p
+      }
+    }
+    
+    # likelihood
+    for( i in 1:nSite ){
+      # state
+      z[i] ~ dbern( mu1[i] )
+      mu1[i] <- psi[i]
+      for( t in 1:nOcc ){
+        # observation
+        y[i,t] ~ dbern( mu2[i,t] )
+        mu2[i,t] <- p[i,t] * z[i]
+      }
+    }
+  
+  }

@@ -1,0 +1,35 @@
+
+  model {
+    # priors
+    b0.psi ~ dnorm( 0, 0.001 )T(-10,10)
+    for(t in 1:nOcc){
+        b0.p[t] ~ dnorm( 0, 0.001 )T(-10,10)
+    }
+    
+    # This is just for reporting the back-transformed parameter
+    logit(mean.psi) <- b0.psi
+    for(t in 1:nOcc){
+        logit(mean.p[t]) <- b0.p[t]
+    }
+    
+    for( i in 1:nSite ){
+      psi[i] <- mean.psi
+      for( t in 1:nOcc ){
+          logit(p[i,t]) <- b0.p[t]
+      }
+    }
+    
+    # likelihood
+    for( i in 1:nSite ){
+      # state
+      z[i] ~ dbern( mu1[i] )
+      mu1[i] <- psi[i]
+      for( t in 1:nOcc ){
+        # observation
+        y[i,t] ~ dbern( mu2[i,t] )
+        mu2[i,t] <- p[i,t] * z[i]
+      }
+    }
+    # Derived
+    N <- sum(z)
+  }

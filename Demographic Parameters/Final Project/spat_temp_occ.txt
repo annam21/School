@@ -24,6 +24,7 @@
     
     # Likelihood
     for( i in 1:nSite ){
+      
       # State of site 
       mu1[i] <- psi[i]
       z[i] ~ dbern( mu1[i] )
@@ -36,10 +37,6 @@
     }
     
     for(j in 1:nObs){
-      # State of camera (occ|plot occupied)
-#      mu3[site[j], space[j]] <- theta[site[j], space[j]] * z[site[j]]
-#      zz[site[j], space[j]] ~ dbern(mu3[site[j], space[j]])
-    
       # Observation (detected|cam occupied)
       mu2[site[j], time[j], space[j]] <- p[site[j], time[j], space[j]] * zz[site[j], space[j]]
       y[j] ~ dbern( mu2[site[j], time[j], space[j]] )

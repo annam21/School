@@ -29,25 +29,28 @@
 
   
   
-#########################
+####################################################
+  # Temporal replicates (combine data from all cameras per site) 
   # Create occupancy encounter history
-### Without effort included so far. 
+  # Effort is irrelevant because all days have at least one camera open
   
   # Load access database
   load("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/2015 data/access.sum.RData")
   
-  # Make a dataframe for camera number 1-9
+  # Associate each cam and plot with numbers
+    # camID is unique for every camera
+    # camnum is 1-9 for cameras within a plot (used in spatial replicate model)
+    # plotnum is 1-18
   camplot <- select(access.sum, camID, plot, camnum) %>%
     # Take out the weird cameras that don't really exist
     filter(camnum != 0, 
            !(camID %in% c("AM999", "AM888", "AM777"))) %>% 
-    select(-camnum) %>%
     rename(cam = camID) %>%
     mutate(camID = 1:159, # Unique ID for each camera
            plotnum = as.numeric(as.factor(plot)) ) 
-
+  
   # Make an encounter history (combine all cameras, temporal replicates of 1 day)
-  dat <- mddata %>%
+  dat.t <- mddata %>%
     rename(present = mdpresent) %>%
     left_join(., camplot, by = c("plot" = "plot")) %>%
     # Encounter history by day, group all cameras together
@@ -56,23 +59,29 @@
               plotnum = first(plotnum)) %>%
     # This part stays the same
     mutate(eh = ifelse(pres == T, 1, 0),
-           occasion = as.numeric(as.factor(dateLST)),
-           beav = ifelse(grepl("BH", plot), 1, 0)) # Is the camera in the Beaverhead?
+           occasion = as.numeric(as.factor(dateLST)) ) 
+  
+  # Create indicator of which zone the plot is in (length = # sites)
+  zone <- camplot %>%
+    group_by(plot) %>%
+    summarise(plotnum = first(plotnum)) %>%
+    mutate(beav = ifelse(grepl("BH", plot), 1, 0)) %>% # Is the camera in the Beaverhead?
+    ungroup()
 
 ############################################
-  # pdot
+  # pdot temporal 
   # Data
-  occ.data <- list(y = dat$eh,
-                   nObs = length(dat$dateLST),
-                   nSite = length(unique(dat$plotnum)),
-                   site = dat$plotnum,
-                   occ = dat$occasion
+  occ.data <- list(y = dat.t$eh,
+                   nObs = length(dat.t$eh),
+                   nSite = length(unique(dat.t$plotnum)),
+                   site = dat.t$plotnum,
+                   occ = dat.t$occasion
                    )
     
   # Initial values
   # initial values for JAGS
   occ.inits <- function(){
-    list( z = rep( 1, length(unique(dat$plotnum))) ,
+    list( z = rep( 1, length(unique(dat.t$plotnum))) ,
           b0.psi = runif( 1, -3, 3 ),
           b0.p = runif( 1, -3, 3 )
     )
@@ -92,10 +101,10 @@
                       occ.inits,
                       occ.parms,
                       "School/Demographic Parameters/Final Project/pdot_occ.txt",
-                      n.chains=nc, 
-                      n.iter=ni, 
-                      n.burnin=nb,
-                      n.thin=nt
+                      n.chains = nc, 
+                      n.iter = ni, 
+                      n.burnin = nb,
+                      n.thin = nt
   )
   
   # View result
@@ -103,17 +112,13 @@
   mcmcplot( occ.result )
  
 ############################################
-  # psizone
-  zone <- dat %>%
-    group_by(plotnum) %>%
-    summarise(beav = first(beav))
-  
-  # Data
-  occ.data <- list(y = dat$eh,
-                   nObs = length(dat$dateLST),
-                   site = dat$plotnum,
+  # Psi zone temporal
+  # JAGS Data
+  occ.data <- list(y = dat.t$eh,
+                   nObs = length(dat.t$dateLST),
+                   site = dat.t$plotnum,
                    nSite = length(zone$beav),
-                   occ = dat$occasion,
+                   occ = dat.t$occasion,
                    zone = zone$beav
   )
   
@@ -141,10 +146,10 @@
                       occ.inits,
                       occ.parms,
                       "School/Demographic Parameters/Final Project/psizone_occ.txt",
-                      n.chains=nc, 
-                      n.iter=ni, 
-                      n.burnin=nb,
-                      n.thin=nt
+                      n.chains = nc, 
+                      n.iter = ni, 
+                      n.burnin = nb,
+                      n.thin = nt
   )
   
   # View result
@@ -158,20 +163,155 @@
 ###################################################
   # Include camera effort
   
+  # Start by making an eh by day
+  source("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/Image Analysis/eh_fn.R")
+  cam.eh <- eh_fn(pics, starthour = "12:00:00", endhour = "12:00:00", 
+                  by_t = "day", datelim = NULL, animal.eh = F)
+  
+  # Add effort to data, if the camera was closed, make occupancy NA
+  effort <- left_join(cam.eh, camplot, by = c("cam" = "cam")) %>%
+    filter(ideal.date >= as.Date("2016-02-01"),
+           ideal.date <= as.Date("2016-02-29")) %>%
+    group_by(plot, ideal.date) %>%
+    summarise(openever = any(open == T))
+  any(tst$openever == F)
+  # NOPE just kidding. All days have at least one camera open
+  
+######################################
+  # Spatial replicates
+
+  # Make an encounter history (combine all days (Feb only), spatial replicates of 1 camera)
+  # Now, occasion is 1-9 (the camera replicates)
+  dat.sp <- mddata %>%
+    rename(present = mdpresent) %>%
+    left_join(., camplot, by = c("plot" = "plot", "cam" = "cam")) %>%
+    # Encounter history by day, group all cameras together
+    group_by(cam) %>%
+    summarise(pres = any(present == T),
+              plotnum = first(plotnum),
+              camID = first(camID),
+              occasion = first(camnum)) %>%
+    # This part stays the same
+    mutate(eh = ifelse(pres == T, 1, 0))
+  
+############################################
+  # pdot spatial
+  # Data
+  occ.data <- list(y = dat.sp$eh,
+                   nObs = length(dat.sp$eh),
+                   nSite = length(unique(dat.sp$plotnum)),
+                   site = dat.sp$plotnum,
+                   occ = dat.sp$occasion
+  )
+  
+  # Initial values
+  # initial values for JAGS
+  occ.inits <- function(){
+    list( z = rep( 1, length(unique(dat.sp$plotnum))) ,
+          b0.psi = runif( 1, -3, 3 ),
+          b0.p = runif( 1, -3, 3 )
+    )
+  }
+  
+  # set parameters to track in JAGS
+  occ.parms <- c( "b0.psi", "b0.p", "mean.psi", "mean.p" )
+  
+  # set up for MCMC run
+  ni <- 5000
+  nt <- 1
+  nb <- 500
+  nc <- 3
+  
+  # run the MCMC chain in JAGS
+  occ.result <- jags( occ.data, 
+                      occ.inits,
+                      occ.parms,
+                      "School/Demographic Parameters/Final Project/pdot_occ.txt",
+                      n.chains = nc, 
+                      n.iter = ni, 
+                      n.burnin = nb,
+                      n.thin = nt
+  )
+  
+  # View result
+  occ.result
+  mcmcplot( occ.result )
+  
+### Not every camera has 9 replicates - is the model putting these as NAs in p[i,t]
+  # and making up values for them?
+  
+###################################################
+  # Temporal and spatial replicates
+  # Make encounter history (both spatial and temporal replicates)
+  dat.sptp <- mddata %>%
+    rename(present = mdpresent) %>%
+    left_join(., camplot, by = c("plot" = "plot", "cam" = "cam")) %>%
+    # Encounter history by day and camera
+    group_by(plot, camnum, dateLST) %>%
+    summarise(pres = any(present == T),
+              plotnum = first(plotnum)) %>%
+    # This part stays the same (ish)
+    mutate(eh = ifelse(pres == T, 1, 0),
+           time = as.numeric(as.factor(dateLST)),
+           space = camnum)
+
+#######################################################
+  # pdot spatial and temporal
+  # Data
+  occ.data <- list(y = dat.sptp$eh,
+                   nObs = length(dat.sptp$eh),
+                   nSite = length(unique(dat.sptp$plotnum)),
+                   site = dat.sptp$plotnum,
+                   nCam = max(dat.sptp$camnum), # No. cams per plot
+                  # nTime = max(dat.sptp$time),
+                   time = dat.sptp$time,
+                  # nSpace = max(dat.sptp$space),
+                   space = dat.sptp$space
+  )
+  
+  # Initial values
+  # initial values for JAGS
+  occ.inits <- function(){
+    list( z = rep( 1, length(unique(dat.sptp$plotnum))) ,
+          zz = matrix( 1, nrow = length(unique(dat.sptp$plotnum)), 
+                       ncol = max(dat.sptp$camnum) ),
+          b0.psi = runif( 1, -3, 3 ),
+          b0.p = runif( 1, -3, 3 ),
+          b0.theta = runif(1, -3, 3)
+    )
+  }
+  
+  # set parameters to track in JAGS
+  occ.parms <- c( "b0.psi", "b0.p", "b0.theta", "mean.psi", "mean.p", "mean.theta")
+  
+  # set up for MCMC run
+  ni <- 5000
+  nt <- 1
+  nb <- 500
+  nc <- 3
+  
+  # run the MCMC chain in JAGS
+  occ.result <- jags( occ.data, 
+                      occ.inits,
+                      occ.parms,
+                      "School/Demographic Parameters/Final Project/spat_temp_occ.txt",
+                      n.chains = nc, 
+                      n.iter = ni, 
+                      n.burnin = nb,
+                      n.thin = nt
+  )
+  
+  # View result
+  occ.result
+  mcmcplot( occ.result )
   
   
   
   
+################################################
+  # Bunch o' crap I'm not using 
   
   
-  
-  
-  
-  
-  
-  
-  
-###################################
   # Create an effort encounter history by week
   # Start by making an eh by day
   source("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/Image Analysis/eh_fn.R")

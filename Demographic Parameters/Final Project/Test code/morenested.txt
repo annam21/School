@@ -1,0 +1,30 @@
+
+  model {
+    # priors
+    b0.psi ~ dnorm( 0, 0.001 )T(-10,10)
+    b0.p ~ dnorm( 0, 0.001 )T(-10,10)
+    
+    # For reporting only
+    logit(mean.psi) <- b0.psi
+    logit(mean.p) <- b0.p
+    
+    # For the model 
+    for(j in 1:nObs){
+      logit(psi[j]) <- b0.psi # psi is length j now
+      logit(p[site[j], occ[j]]) <- b0.p # p is dimensions [site, occasions]
+    }
+    
+    # likelihood
+     for(j in 1:nObs){
+       # State
+       mu1[j] <- psi[j] # This is also length j
+       z[j] ~ dbern(mu1[j])
+     }
+
+    
+    # Observation
+    for(j in 1:nObs){
+      mu2[site[j], occ[j]] <- p[site[j], occ[j]] * z[site[j]]
+      y[j] ~ dbern( mu2[site[j], occ[j]] )
+    }
+}

@@ -35,7 +35,7 @@
     }
   }
   # Chop off all the ones with no detetions
-  nd <- which(apply(EH, 1, sum) > 0) # those with at least 1 detectiond
+  nd <- which(apply(EH, 1, sum) > 0) # those with at least 1 detection
   EH <- EH[nd, ]
   bodySize <- bodySize[nd]
   

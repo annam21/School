@@ -1,4 +1,8 @@
   # 
+
+# Set working directory
+setwd("C:/Users/anna.moeller/Documents/GitHub/School/Demographic Parameters/Lab Day 2_3 RMark")
+
   data(dipper)
   dipper.model=mark(dipper) # Use defaults: CJS model, phi(.).p(.)
   run.dipper=function(){

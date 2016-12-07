@@ -14,11 +14,9 @@
   # Separate out mule deer and white tails
   source("CameraTrapStudy/Image Analysis/deerpresent_fn.R")
   mddata <- deerpresent_fn(pics) %>%
-    
     # Get rid of all that other crap
     select(site, plot, cam, timeLST, dateLST, mdpresent, MDbuck, MDantlerless, MDfawn, 
            MDunkn, opstate, uniquemark, easting, northing, plot.start, plot.end) %>%
-    
     # Only look at February
     filter(month(dateLST) == 2)
   
@@ -27,13 +25,6 @@
     group_by(plot) %>%
     summarise(deer = any(mdpresent == T))
 
-  
-  
-####################################################
-  # Temporal replicates (combine data from all cameras per site) 
-  # Create occupancy encounter history
-  # Effort is irrelevant because all days have at least one camera open
-  
   # Load access database
   load("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/2015 data/access.sum.RData")
   
@@ -49,6 +40,32 @@
     mutate(camID = 1:159, # Unique ID for each camera
            plotnum = as.numeric(as.factor(plot)) ) 
   
+  # Create indicator of which zone the plot is in (length = # sites)
+  zone <- camplot %>%
+    group_by(plot) %>%
+    summarise(plotnum = first(plotnum)) %>%
+    mutate(beav = ifelse(grepl("BH", plot), 1, 0)) %>% # Is the camera in the Beaverhead?
+    ungroup()
+  
+  
+####################################################
+  # Temporal replicates (combine data from all cameras per site) 
+ 
+  # Effort is irrelevant because all days have at least one camera open 
+  # # Start by making an eh by day
+  # source("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/Image Analysis/eh_fn.R")
+  # cam.eh <- eh_fn(pics, starthour = "12:00:00", endhour = "12:00:00", 
+  #                 by_t = "day", datelim = NULL, animal.eh = F)
+  # 
+  # # Add effort to data, if the camera was closed, make occupancy NA
+  # effort <- left_join(cam.eh, camplot, by = c("cam" = "cam")) %>%
+  #   filter(ideal.date >= as.Date("2016-02-01"),
+  #          ideal.date <= as.Date("2016-02-29")) %>%
+  #   group_by(plot, ideal.date) %>%
+  #   summarise(openever = any(open == T))
+  #
+  # any(tst$openever == F) #  All days have at least one camera open
+
   # Make an encounter history (combine all cameras, temporal replicates of 1 day)
   dat.t <- mddata %>%
     rename(present = mdpresent) %>%
@@ -60,14 +77,7 @@
     # This part stays the same
     mutate(eh = ifelse(pres == T, 1, 0),
            occasion = as.numeric(as.factor(dateLST)) ) 
-  
-  # Create indicator of which zone the plot is in (length = # sites)
-  zone <- camplot %>%
-    group_by(plot) %>%
-    summarise(plotnum = first(plotnum)) %>%
-    mutate(beav = ifelse(grepl("BH", plot), 1, 0)) %>% # Is the camera in the Beaverhead?
-    ungroup()
-
+ 
 ############################################
   # pdot temporal 
   # Data
@@ -160,25 +170,11 @@
   plogis(occ.result$BUGSoutput$mean$b0.psi) # St. Joe
   plogis(occ.result$BUGSoutput$mean$b0.psi + occ.result$BUGSoutput$mean$b1.psi) # Beaverhead
   
-###################################################
-  # Include camera effort
-  
-  # Start by making an eh by day
-  source("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/Image Analysis/eh_fn.R")
-  cam.eh <- eh_fn(pics, starthour = "12:00:00", endhour = "12:00:00", 
-                  by_t = "day", datelim = NULL, animal.eh = F)
-  
-  # Add effort to data, if the camera was closed, make occupancy NA
-  effort <- left_join(cam.eh, camplot, by = c("cam" = "cam")) %>%
-    filter(ideal.date >= as.Date("2016-02-01"),
-           ideal.date <= as.Date("2016-02-29")) %>%
-    group_by(plot, ideal.date) %>%
-    summarise(openever = any(open == T))
-  any(tst$openever == F)
-  # NOPE just kidding. All days have at least one camera open
-  
 ######################################
   # Spatial replicates
+  
+  # Effort is moot because all cameras have at least 1 day open during the month
+### I think... But doesn't this sort of change the data???
 
   # Make an encounter history (combine all days (Feb only), spatial replicates of 1 camera)
   # Now, occasion is 1-9 (the camera replicates)
@@ -320,6 +316,7 @@
     
   # There aren't very many of these because mddata only includes the pictures that were
   # taken in February (if a camera didn't take any pictures on a day, it got filtered out)
+  # These are just the camera that are iced over, spit on, etc. 
     
   # Data
   occ.data <- list(y = effort$eh,

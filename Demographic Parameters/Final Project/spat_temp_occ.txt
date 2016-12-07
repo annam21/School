@@ -14,12 +14,13 @@
     for( i in 1:nSite ){
       logit(psi[i]) <- b0.psi
       
-      for(k in 1:nCam){
+      for(k in 1:nSpace){
         logit(theta[i, k]) <- b0.theta # Dimensions[site, cam]
+     
+        for(h in 1:nTime){
+          logit(p[i, h, k]) <- b0.p # Dimensions[site, time, cam]
+        }
       }      
-    }
-    for(j in 1:nObs){
-      logit(p[site[j], time[j], space[j]]) <- b0.p
     }
     
     # Likelihood
@@ -30,7 +31,7 @@
       z[i] ~ dbern( mu1[i] )
       
       # State of camera (occ|plot occupied)
-      for(k in 1:nCam){
+      for(k in 1:nSpace){
         mu3[i, k] <- theta[i, k] * z[i]
         zz[i, k] ~ dbern(mu3[i, k])
       }

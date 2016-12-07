@@ -97,7 +97,7 @@
   nc <- 3
   
   # run the MCMC chain in JAGS
-  occ.result <- jags( occ.data, 
+  occ.res.t <- jags( occ.data, 
                       occ.inits,
                       occ.parms,
                       "School/Demographic Parameters/Final Project/pdot_occ.txt",
@@ -108,8 +108,8 @@
   )
   
   # View result
-  occ.result
-  mcmcplot( occ.result )
+  occ.res.t
+  mcmcplot( occ.res.t )
  
 ############################################
   # Psi zone temporal
@@ -223,7 +223,7 @@
   nc <- 3
   
   # run the MCMC chain in JAGS
-  occ.result <- jags( occ.data, 
+  occ.res.sp <- jags( occ.data, 
                       occ.inits,
                       occ.parms,
                       "School/Demographic Parameters/Final Project/pdot_occ.txt",
@@ -234,8 +234,8 @@
   )
   
   # View result
-  occ.result
-  mcmcplot( occ.result )
+  occ.res.sp
+  mcmcplot( occ.res.sp )
   
 ### Not every camera has 9 replicates - is the model putting these as NAs in p[i,t]
   # and making up values for them?
@@ -262,11 +262,11 @@
                    nObs = length(dat.sptp$eh),
                    nSite = length(unique(dat.sptp$plotnum)),
                    site = dat.sptp$plotnum,
-                   nCam = max(dat.sptp$camnum), # No. cams per plot
-                  # nTime = max(dat.sptp$time),
-                   time = dat.sptp$time,
-                  # nSpace = max(dat.sptp$space),
-                   space = dat.sptp$space
+                   nSpace = max(dat.sptp$space), # No. cams per plot
+                   space = dat.sptp$space,
+                   nTime = max(dat.sptp$time), # No. temporal replicates
+                   time = dat.sptp$time
+                   
   )
   
   # Initial values
@@ -291,7 +291,7 @@
   nc <- 3
   
   # run the MCMC chain in JAGS
-  occ.result <- jags( occ.data, 
+  occ.res.sptp <- jags( occ.data, 
                       occ.inits,
                       occ.parms,
                       "School/Demographic Parameters/Final Project/spat_temp_occ.txt",
@@ -302,8 +302,8 @@
   )
   
   # View result
-  occ.result
-  mcmcplot( occ.result )
+  occ.res.sptp
+  mcmcplot( occ.res.sptp )
   
   
   

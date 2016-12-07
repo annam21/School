@@ -305,59 +305,79 @@
   occ.res.sptp
   mcmcplot( occ.res.sptp )
   
+#####################################################
+  # Also include camera effort in spatiotemporal one
+  # Start by making an eh by day
+  source("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/Image Analysis/eh_fn.R")
+  cam.eh <- eh_fn(pics, starthour = "00:00:00", endhour = "00:00:00", 
+                  by_t = "day", datelim = NULL, animal.eh = F)
+  
+  # Add effort to data, if the camera was closed, make occupancy NA
+  effort <- left_join(dat.sptp, camplot, by = c("plot" = "plot", "camnum" = "camnum",
+                                                "plotnum" = "plotnum")) %>%
+    left_join(., cam.eh, by = c("cam" = "cam", "dateLST" = "ideal.date")) %>%
+    mutate(eh = replace(eh, open == F, NA))
+    
+  # There aren't very many of these because mddata only includes the pictures that were
+  # taken in February (if a camera didn't take any pictures on a day, it got filtered out)
+    
+  # Data
+  occ.data <- list(y = effort$eh,
+                   nObs = length(effort$eh),
+                   nSite = length(unique(effort$plotnum)),
+                   site = effort$plotnum,
+                   nSpace = max(effort$space), # No. cams per plot
+                   space = effort$space,
+                   nTime = max(effort$time), # No. temporal replicates
+                   time = effort$time
+                   
+  )
+  
+  # Initial values
+  # initial values for JAGS
+  occ.inits <- function(){
+    list( z = rep( 1, length(unique(effort$plotnum))) ,
+          zz = matrix( 1, nrow = length(unique(effort$plotnum)), 
+                       ncol = max(effort$camnum) ),
+          b0.psi = runif( 1, -3, 3 ),
+          b0.p = runif( 1, -3, 3 ),
+          b0.theta = runif(1, -3, 3)
+    )
+  }
+  
+  # set parameters to track in JAGS
+  occ.parms <- c( "b0.psi", "b0.p", "b0.theta", "mean.psi", "mean.p", "mean.theta")
+  
+  # set up for MCMC run
+  ni <- 5000
+  nt <- 1
+  nb <- 500
+  nc <- 3
+  
+  # run the MCMC chain in JAGS
+  occ.res.sptp.ef <- jags( occ.data, 
+                        occ.inits,
+                        occ.parms,
+                        "School/Demographic Parameters/Final Project/spat_temp_occ.txt",
+                        n.chains = nc, 
+                        n.iter = ni, 
+                        n.burnin = nb,
+                        n.thin = nt
+  )
+  
+  # View result
+  occ.res.sptp.ef
+  mcmcplot( occ.res.sptp.ef )
+  
+  # This helped decrease DIC a little.  
+  
+  
   
   
   
 ################################################
   # Bunch o' crap I'm not using 
   
-  
-  # Create an effort encounter history by week
-  # Start by making an eh by day
-  source("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/Image Analysis/eh_fn.R")
-  cam.eh <- eh_fn(pics, starthour = "12:00:00", endhour = "12:00:00", 
-                  by_t = "day", datelim = NULL, animal.eh = F)
-  
-  # Look at the week I'm using and if at least 4 of the days are open, call it open
-  effort <- filter(cam.eh, ideal.date >= as.Date("2016-02-01") & 
-                     ideal.date <= as.Date("2016-02-08")) %>%
-    group_by(cam) %>%
-    summarise(test = length(which(open == T))) %>%
-    mutate(open = ifelse(test >= 4, T, F)) %>%
-    select(-test)
-  
-  # Create an occupancy encounter history for a single week
-  # This gives NAs where there is no "elkpresent" column for the entire week
-  #   That includes photos that have not been gone through yet and
-  #   photos that don't exist (got deleted/stolen, etc.)
-  # This also accounts for censored photos using effort, above
-  occ <- filter(pics, dateLST >= as.Date("2016-02-01") & dateLST <= as.Date("2016-02-08")) %>%
-    group_by(cam) %>%
-    summarise(occupied = any(elkpresent == T),
-              plot = min(plot)) %>%
-    right_join(., camnum, by = c("cam" = "camID")) %>% # This is to change cam from an ID to a number 1-9
-    left_join(., effort, by = c("cam" = "cam")) %>% # This adds the "open" column
-    mutate(occupied = replace(occupied, open == F, NA), # If it's closed, occupied is an NA
-           occupied = ifelse(is.na(occupied), ".", ifelse(occupied == T, "1", "0"))) %>% 
-    select(-plot.x, -cam, -open) %>% 
-    rename(plot = plot.y) %>%
-    spread(camnum, occupied) %>%
-    unite(ch, 2:10, sep = "") # tidyr
-  
-  # For JAGS
-  occ <- filter(pics, dateLST >= as.Date("2016-02-01") & dateLST <= as.Date("2016-02-08")) %>%
-    group_by(cam) %>%
-    summarise(occupied = any(elkpresent == T),
-              plot = min(plot)) %>%
-    right_join(., camnum, by = c("cam" = "camID")) %>% # This is to change cam from an ID to a number 1-9
-    left_join(., effort, by = c("cam" = "cam")) %>% # This adds the "open" column
-    mutate(occupied = replace(occupied, open == F, NA), # If it's closed, occupied is an NA
-           occupied = ifelse(occupied == T, 1, ifelse(occupied == F, 0, NA))) %>% 
-    select(-plot.x, -cam, -open) %>% 
-    rename(plot = plot.y) %>%
-    spread(camnum, occupied) 
-  
-  # #############################
   # # Okay, scrap that. Try bunnies 
   # lagos <- pics %>%
   #   select(site, plot, cam, timeLST, dateLST, otherpresent, lagomorph, opstate, 
@@ -399,51 +419,3 @@
   lions %>%
     group_by(plot) %>%
     summarise(l = any(lion.adult > 0 | lion.kitten > 0)) 
-  
-  ### Make encounter history
-  # Divide up into chunks of time? 
-  
-  
-  
-  # # pdot nested
-  # # Data
-  # occ.data <- list(y = dat$eh,
-  #                  nObs = length(dat$dateLST),
-  #                  site = dat$plotnum,
-  #                  occ = dat$occasion
-  # )
-  # 
-  # # Initial values
-  # # initial values for JAGS
-  # occ.inits <- function(){
-  #   list( z = rep( 1, length(dat$dateLST)) ,
-  #         b0.psi = runif( 1, -3, 3 ),
-  #         b0.p = runif( 1, -3, 3 )
-  #   )
-  # }
-  # 
-  # # set parameters to track in JAGS
-  # occ.parms <- c( "b0.psi", "b0.p","mean.psi", "mean.p" )
-  # 
-  # # set up for MCMC run
-  # ni <- 5000
-  # nt <- 1
-  # nb <- 500
-  # nc <- 3
-  # 
-  # # run the MCMC chain in JAGS
-  # occ.result <- jags( occ.data, 
-  #                     occ.inits,
-  #                     occ.parms,
-  #                     "School/Demographic Parameters/Final Project/morenested.txt",
-  #                     n.chains=nc, 
-  #                     n.iter=ni, 
-  #                     n.burnin=nb,
-  #                     n.thin=nt
-  # )
-  # 
-  # # View result
-  # occ.result
-  # mcmcplot( occ.result )
-  
-  

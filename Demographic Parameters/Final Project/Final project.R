@@ -18,12 +18,16 @@
     select(site, plot, cam, timeLST, dateLST, mdpresent, MDbuck, MDantlerless, MDfawn, 
            MDunkn, opstate, uniquemark, easting, northing, plot.start, plot.end) %>%
     # Only look at February
-    filter(month(dateLST) == 2)
+    filter(month(dateLST) == 2) 
   
-  # See if mule deer are at every site
-  mddata %>%
-    group_by(plot) %>%
-    summarise(deer = any(mdpresent == T))
+  # Make it general for functions below
+  data <- mddata %>%
+    rename(present = mdpresent)
+    
+  # # See if mule deer are at every site
+  # mddata %>%
+  #   group_by(plot) %>%
+  #   summarise(deer = any(mdpresent == T))
 
   # Load access database
   load("C:/Users/anna.moeller/Documents/GitHub/CameraTrapStudy/2015 data/access.sum.RData")
@@ -67,8 +71,7 @@
   # any(tst$openever == F) #  All days have at least one camera open
 
   # Make an encounter history (combine all cameras, temporal replicates of 1 day)
-  dat.t <- mddata %>%
-    rename(present = mdpresent) %>%
+  dat.t <- data %>%
     left_join(., camplot, by = c("plot" = "plot")) %>%
     # Encounter history by day, group all cameras together
     group_by(plot, dateLST) %>%
@@ -120,6 +123,8 @@
   # View result
   occ.res.t
   mcmcplot( occ.res.t )
+  
+  
  
 ############################################
   # Psi zone temporal
@@ -178,8 +183,7 @@
 
   # Make an encounter history (combine all days (Feb only), spatial replicates of 1 camera)
   # Now, occasion is 1-9 (the camera replicates)
-  dat.sp <- mddata %>%
-    rename(present = mdpresent) %>%
+  dat.sp <- data %>%
     left_join(., camplot, by = c("plot" = "plot", "cam" = "cam")) %>%
     # Encounter history by day, group all cameras together
     group_by(cam) %>%
@@ -236,11 +240,127 @@
 ### Not every camera has 9 replicates - is the model putting these as NAs in p[i,t]
   # and making up values for them?
   
+###########################################
+  # n = 9
+##############################################
+  # pdot temporal n = 9
+  # Data
+  dat.t.9 <- data %>%
+    filter(dateLST >= as.Date("2016-02-09"),
+           dateLST <= as.Date("2016-02-17")) %>%
+    left_join(., camplot, by = c("plot" = "plot")) %>%
+    # Encounter history by day, group all cameras together
+    group_by(plot, dateLST) %>%
+    summarise(pres = any(present == T),
+              plotnum = first(plotnum)) %>%
+    # This part stays the same
+    mutate(eh = ifelse(pres == T, 1, 0),
+           occasion = as.numeric(as.factor(dateLST)) ) 
+
+  occ.data <- list(y = dat.t.9$eh,
+                   nObs = length(dat.t.9$eh),
+                   nSite = length(unique(dat.t.9$plotnum)),
+                   site = dat.t.9$plotnum,
+                   occ = dat.t.9$occasion
+  )
+  
+  # Initial values
+  # initial values for JAGS
+  occ.inits <- function(){
+    list( z = rep( 1, length(unique(dat.t.9$plotnum))) ,
+          b0.psi = runif( 1, -3, 3 ),
+          b0.p = runif( 1, -3, 3 )
+    )
+  }
+  
+  # set parameters to track in JAGS
+  occ.parms <- c( "b0.psi", "b0.p", "mean.psi", "mean.p" )
+  
+  # set up for MCMC run
+  ni <- 5000
+  nt <- 1
+  nb <- 500
+  nc <- 3
+  
+  # run the MCMC chain in JAGS
+  occ.res.t.9 <- jags( occ.data, 
+                     occ.inits,
+                     occ.parms,
+                     "School/Demographic Parameters/Final Project/pdot_occ.txt",
+                     n.chains = nc, 
+                     n.iter = ni, 
+                     n.burnin = nb,
+                     n.thin = nt
+  )
+  
+  # View result
+  occ.res.t.9
+  mcmcplot( occ.res.t.9 )
+  
+  
+############################################
+  # pdot spatial n = 9
+  # Data
+  dat.sp.9 <- data %>%
+    filter(dateLST >= as.Date("2016-02-09"),
+           dateLST <= as.Date("2016-02-17")) %>%
+    left_join(., camplot, by = c("plot" = "plot", "cam" = "cam")) %>%
+    # Encounter history by day, group all cameras together
+    group_by(cam) %>%
+    summarise(pres = any(present == T),
+              plotnum = first(plotnum),
+              camID = first(camID),
+              occasion = first(camnum)) %>%
+    # This part stays the same
+    mutate(eh = ifelse(pres == T, 1, 0))
+  
+  occ.data <- list(y = dat.sp.9$eh,
+                   nObs = length(dat.sp.9$eh),
+                   nSite = length(unique(dat.sp.9$plotnum)),
+                   site = dat.sp.9$plotnum,
+                   occ = dat.sp.9$occasion
+  )
+  
+  # Initial values
+  # initial values for JAGS
+  occ.inits <- function(){
+    list( z = rep( 1, length(unique(dat.sp.9$plotnum))) ,
+          b0.psi = runif( 1, -3, 3 ),
+          b0.p = runif( 1, -3, 3 )
+    )
+  }
+  
+  # set parameters to track in JAGS
+  occ.parms <- c( "b0.psi", "b0.p", "mean.psi", "mean.p" )
+  
+  # set up for MCMC run
+  ni <- 5000
+  nt <- 1
+  nb <- 500
+  nc <- 3
+  
+  # run the MCMC chain in JAGS
+  occ.res.sp.9 <- jags( occ.data, 
+                      occ.inits,
+                      occ.parms,
+                      "School/Demographic Parameters/Final Project/pdot_occ.txt",
+                      n.chains = nc, 
+                      n.iter = ni, 
+                      n.burnin = nb,
+                      n.thin = nt
+  )
+  
+  # View result
+  occ.res.sp.9
+  mcmcplot( occ.res.sp.9 )
+  
+  ### Not every camera has 9 replicates - is the model putting these as NAs in p[i,t]
+  # and making up values for them?
+  
 ###################################################
   # Temporal and spatial replicates
   # Make encounter history (both spatial and temporal replicates)
-  dat.sptp <- mddata %>%
-    rename(present = mdpresent) %>%
+  dat.sptp <- data %>%
     left_join(., camplot, by = c("plot" = "plot", "cam" = "cam")) %>%
     # Encounter history by day and camera
     group_by(plot, camnum, dateLST) %>%
@@ -301,6 +421,10 @@
   occ.res.sptp
   mcmcplot( occ.res.sptp )
   
+  # plot the deviance myself
+  hist(occ.res.sptp$BUGSoutput$sims.list$deviance, breaks = 100)
+### hmmm...
+    
 #####################################################
   # Also include camera effort in spatiotemporal one
   # Start by making an eh by day
@@ -368,8 +492,58 @@
   
   # This helped decrease DIC a little.  
   
+#################################
+  # Results table
+  df <- data.frame(
+    model = c("temporal", "spatial", "spatiotemporal", "spatiotemporal with effort"),
+    psi = c(occ.res.t$BUGSoutput$mean$mean.psi, 
+            occ.res.sp$BUGSoutput$mean$mean.psi, 
+            occ.res.sptp$BUGSoutput$mean$mean.psi,
+            occ.res.sptp.ef$BUGSoutput$mean$mean.psi),
+    SD.psi = c(occ.res.t$BUGSoutput$sd$mean.psi, 
+           occ.res.sp$BUGSoutput$sd$mean.psi, 
+           occ.res.sptp$BUGSoutput$sd$mean.psi,
+           occ.res.sptp.ef$BUGSoutput$sd$mean.psi),
+    p = c(occ.res.t$BUGSoutput$mean$mean.p, 
+          occ.res.sp$BUGSoutput$mean$mean.p, 
+          occ.res.sptp$BUGSoutput$mean$mean.p,
+          occ.res.sptp.ef$BUGSoutput$mean$mean.p),
+    SD.p = c(occ.res.t$BUGSoutput$sd$mean.p, 
+           occ.res.sp$BUGSoutput$sd$mean.p, 
+           occ.res.sptp$BUGSoutput$sd$mean.p,
+           occ.res.sptp.ef$BUGSoutput$sd$mean.p),
+    theta = c(NA, 
+              NA, 
+              occ.res.sptp$BUGSoutput$mean$mean.theta,
+              occ.res.sptp.ef$BUGSoutput$mean$mean.theta),
+    SD.theta = c(NA, 
+                 NA, 
+                 occ.res.sptp$BUGSoutput$sd$mean.theta,
+                 occ.res.sptp.ef$BUGSoutput$sd$mean.theta)
+    )
   
+  # Making graph of p
+  tst <- data.frame(x = occ.res.sp$BUGSoutput$sims.list$mean.p)
+  ggplot(tst, aes(x)) + 
+    geom_freqpoly(bins = 50) +
+    xlim(0.25, 0.75)
+  tst2 <- data.frame(x = occ.res.t$BUGSoutput$sims.list$mean.p)
+  ggplot(tst2, aes(x)) + 
+    geom_freqpoly(bins = 100) + 
+    xlim(0.25, 0.75)
   
+  # Comparing when n = 9
+  df9 <- data.frame(
+    model = c("temporal n = 9", "spatial n = 9"),
+    psi = c(occ.res.t.9$BUGSoutput$mean$mean.psi, 
+            occ.res.sp.9$BUGSoutput$mean$mean.psi),
+    SD.psi = c(occ.res.t.9$BUGSoutput$sd$mean.psi, 
+               occ.res.sp.9$BUGSoutput$sd$mean.psi),
+    p = c(occ.res.t.9$BUGSoutput$mean$mean.p, 
+          occ.res.sp.9$BUGSoutput$mean$mean.p),
+    SD.p = c(occ.res.t.9$BUGSoutput$sd$mean.p, 
+            occ.res.sp.9$BUGSoutput$sd$mean.p)
+  )
   
   
 ################################################
@@ -413,6 +587,8 @@
     filter(month(dateLST) == 2)
   lions$lion.kitten[is.na(lions$lion.kitten)] <- 0
   lions$lion.adult[is.na(lions$lion.adult)] <- 0
-  lions %>%
-    group_by(plot) %>%
-    summarise(l = any(lion.adult > 0 | lion.kitten > 0)) 
+  # lions %>%
+  #   group_by(plot) %>%
+  #   summarise(l = any(lion.adult > 0 | lion.kitten > 0))
+ # data <- lions %>%
+ #   rename(present = otherpresent)

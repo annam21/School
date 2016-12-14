@@ -425,6 +425,128 @@
   hist(occ.res.sptp$BUGSoutput$sims.list$deviance, breaks = 100)
 ### hmmm...
     
+####################################################
+  # pdot spatial and temporal with Random Effect for camera
+  # Data
+  occ.data <- list(y = dat.sptp$eh,
+                   nObs = length(dat.sptp$eh),
+                   nSite = length(unique(dat.sptp$plotnum)),
+                   site = dat.sptp$plotnum,
+                   nSpace = max(dat.sptp$camid), # No. cams per plot
+                   space = dat.sptp$camid,
+                   nTime = max(dat.sptp$time), # No. temporal replicates
+                   time = dat.sptp$time
+  )
+  
+  # Initial values
+  # initial values for JAGS
+  occ.inits <- function(){
+    list( z = rep( 1, length(unique(dat.sptp$plotnum))) ,
+          zz = matrix( 1, nrow = length(unique(dat.sptp$plotnum)), 
+                       ncol = max(dat.sptp$camid) ),
+          b0.psi = runif( 1, -3, 3 ),
+          b0.p = runif( 1, -3, 3 ),
+          b0.theta = runif(1, -3, 3)#,
+          #taue = runif(1, 0, 1)
+    )
+  }
+  
+  # set parameters to track in JAGS
+  occ.parms <- c( "b0.psi", "b0.p", "b0.theta", "mean.psi", "mean.p", "mean.theta",
+                  "taue")
+  
+  # set up for MCMC run
+  ni <- 5000
+  nt <- 1
+  nb <- 1500
+  nc <- 3
+  
+  # run the MCMC chain in JAGS
+  occ.res.sptp.RE <- jags( occ.data, 
+                        occ.inits,
+                        occ.parms,
+                        "School/Demographic Parameters/Final Project/spat_temp_RE_occ.txt",
+                        n.chains = nc, 
+                        n.iter = ni, 
+                        n.burnin = nb,
+                        n.thin = nt
+  )
+  
+  # View result
+  occ.res.sptp.RE
+  mcmcplot( occ.res.sptp.RE )
+  
+  # plot the deviance myself
+  hist(occ.res.sptp$BUGSoutput$sims.list$deviance, breaks = 100)
+  ### hmmm...
+  
+  
+#######################################################
+  # NESTED
+  # Data
+  dat.n <- dat.sptp %>%
+    ungroup() %>%
+    arrange(plotnum, space, time) %>%
+    mutate(newplotnum = replace(plotnum, plotnum < 10, paste0(0, plotnum[plotnum < 10])),
+           plotcam = paste(newplotnum, space, sep ="."),
+           camid = as.numeric(as.factor(plotcam)),
+           obs = 1:length(camid)) %>%
+    select(eh, plotnum, camid, obs, space, time)
+
+  # # Send y = length 4232, cam = length 149, site = length 18
+  # occ.data <- list(y = dat.n$eh,
+  #                  nObs = length(dat.n$eh),
+  #                  site = unique(dat.n$plotnum),
+  #                  nSite = length(unique(dat.n$plotnum)), # Total number of plots
+  #                  cam = unique(dat.n$camid),
+  #                  nCam = length(unique(dat.n$camid)) # Total number of cameras
+  #                  ) 
+  
+  # Every observation is unique, each cam has a unique camid, each site has a unique
+  #   plotnum
+  occ.data <- list(y = dat.n$eh,
+                   site = dat.n$plotnum,
+                   cam = dat.n$camid,
+                   nSite = length(unique(dat.n$plotnum)), # Total number of plots
+                   nCam = length(unique(dat.n$camid)), # Total number of cameras
+                   nObs = length(dat.n$eh)
+    )
+
+  # Initial values
+  # initial values for JAGS
+  occ.inits <- function(){
+    list( z = rep( 1, length(dat.n$eh)) ,
+          zz = rep(1, length(dat.n$eh) ),
+          b0.psi = runif( 1, -3, 3 ),
+          b0.p = runif( 1, -3, 3 ),
+          b0.theta = runif(1, -3, 3)
+    )
+  }
+  
+  # set parameters to track in JAGS
+  occ.parms <- c( "b0.psi", "b0.p", "b0.theta", "mean.psi", "mean.p", "mean.theta")
+  
+  # set up for MCMC run
+  ni <- 5000
+  nt <- 1
+  nb <- 1500
+  nc <- 3
+  
+  # run the MCMC chain in JAGS
+  occ.res.n <- jags( occ.data, 
+                           occ.inits,
+                           occ.parms,
+                           "School/Demographic Parameters/Final Project/spat_temp_nested.txt",
+                           n.chains = nc, 
+                           n.iter = ni, 
+                           n.burnin = nb,
+                           n.thin = nt
+  )
+  
+  # View result
+  occ.res.n
+  mcmcplot( occ.res.n )
+  # NOT EVEN CLOSE
 #####################################################
   # Also include camera effort in spatiotemporal one
   # Start by making an eh by day
@@ -495,31 +617,31 @@
 #################################
   # Results table
   df <- data.frame(
-    model = c("temporal", "spatial", "spatiotemporal", "spatiotemporal with effort"),
+    model = c("temporal", "spatial", "spatiotemporal"),
     psi = c(occ.res.t$BUGSoutput$mean$mean.psi, 
             occ.res.sp$BUGSoutput$mean$mean.psi, 
-            occ.res.sptp$BUGSoutput$mean$mean.psi,
-            occ.res.sptp.ef$BUGSoutput$mean$mean.psi),
+            occ.res.sptp$BUGSoutput$mean$mean.psi),
+#            occ.res.sptp.ef$BUGSoutput$mean$mean.psi),
     SD.psi = c(occ.res.t$BUGSoutput$sd$mean.psi, 
            occ.res.sp$BUGSoutput$sd$mean.psi, 
-           occ.res.sptp$BUGSoutput$sd$mean.psi,
-           occ.res.sptp.ef$BUGSoutput$sd$mean.psi),
+           occ.res.sptp$BUGSoutput$sd$mean.psi),
+#           occ.res.sptp.ef$BUGSoutput$sd$mean.psi),
     p = c(occ.res.t$BUGSoutput$mean$mean.p, 
           occ.res.sp$BUGSoutput$mean$mean.p, 
-          occ.res.sptp$BUGSoutput$mean$mean.p,
-          occ.res.sptp.ef$BUGSoutput$mean$mean.p),
+          occ.res.sptp$BUGSoutput$mean$mean.p),
+#          occ.res.sptp.ef$BUGSoutput$mean$mean.p),
     SD.p = c(occ.res.t$BUGSoutput$sd$mean.p, 
            occ.res.sp$BUGSoutput$sd$mean.p, 
-           occ.res.sptp$BUGSoutput$sd$mean.p,
-           occ.res.sptp.ef$BUGSoutput$sd$mean.p),
+           occ.res.sptp$BUGSoutput$sd$mean.p),
+#           occ.res.sptp.ef$BUGSoutput$sd$mean.p),
     theta = c(NA, 
               NA, 
-              occ.res.sptp$BUGSoutput$mean$mean.theta,
-              occ.res.sptp.ef$BUGSoutput$mean$mean.theta),
+              occ.res.sptp$BUGSoutput$mean$mean.theta),
+#              occ.res.sptp.ef$BUGSoutput$mean$mean.theta),
     SD.theta = c(NA, 
                  NA, 
-                 occ.res.sptp$BUGSoutput$sd$mean.theta,
-                 occ.res.sptp.ef$BUGSoutput$sd$mean.theta)
+                 occ.res.sptp$BUGSoutput$sd$mean.theta)
+#                 occ.res.sptp.ef$BUGSoutput$sd$mean.theta)
     )
   
   # Making graph of p
@@ -592,3 +714,9 @@
   #   summarise(l = any(lion.adult > 0 | lion.kitten > 0))
  # data <- lions %>%
  #   rename(present = otherpresent)
+  
+  # How to view an encounter history for spatial data
+  dat.sp %>% 
+    select(plotnum, occasion, eh) %>% 
+    spread(occasion, eh) %>%
+    mutate(all = all(2:10) == 1)

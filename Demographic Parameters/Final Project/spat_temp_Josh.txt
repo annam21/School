@@ -1,0 +1,47 @@
+  model {
+    # priors
+    b0.psi ~ dnorm( 0, 0.001 )T(-10, 10)
+    b0.p ~ dnorm( 0, 0.001 )T(-10, 10)
+    b0.theta ~ dnorm( 0, 0.001 )T(-10, 10)
+    
+    # For reporting only
+    logit(mean.psi) <- b0.psi
+    logit(mean.p) <- b0.p
+    logit(mean.theta) <- b0.theta
+    
+    # For the model 
+    for( i in 1:nSite ){
+      logit(psi[i]) <- b0.psi
+      
+      for(k in 1:nSpace){
+        logit(theta[i, k]) <- b0.theta + e[i, k] # Dimensions[site, cam]
+        #logit(theta[i, k]) <- b0.theta + cam_eff[k] #  Just camera
+        #logit(theta[i, k]) <- b0.theta + site_eff[i] #  Just site
+     
+        for(h in 1:nTime){
+          logit(p[i, h, k]) <- b0.p # Dimensions[site, time, cam]
+        }
+      }      
+    }
+    
+    
+    # Likelihood
+    for( i in 1:nSite ){
+      
+      # State of site
+      mu1[i] <- psi[i]
+      z[i] ~ dbern( mu1[i] )
+      
+      # State of camera (occ|plot occupied)
+      for(k in 1:nSpace){
+        mu3[i, k] <- theta[i, k] * z[i]
+        zz[i, k] ~ dbern(mu3[i, k])
+      }
+    }
+    
+    for(j in 1:nObs){
+      # Observation (detected|cam occupied)
+      mu2[site[j], time[j], space[j]] <- p[site[j], time[j], space[j]] * zz[site[j], space[j]]
+      y[j] ~ dbern( mu2[site[j], time[j], space[j]] )
+    }
+}

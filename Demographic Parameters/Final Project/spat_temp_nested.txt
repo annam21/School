@@ -1,0 +1,64 @@
+
+  model {
+    # priors
+    b0.psi ~ dnorm( 0, 0.001 )T(-10, 10)
+    b0.p ~ dnorm( 0, 0.001 )T(-10, 10)
+    b0.theta ~ dnorm( 0, 0.001 )T(-10, 10)
+    
+    # For reporting only
+    logit(mean.psi) <- b0.psi
+    logit(mean.p) <- b0.p
+    logit(mean.theta) <- b0.theta
+    
+    # For the model
+    for ( i in 1:nSite){ # One psi for each plot
+        logit(psi[i]) <- b0.psi
+    }
+    for(j in 1:nCam){ # One theta for each camera
+        logit(theta[j]) <- b0.theta
+    }
+    for(k in 1:nObs){ # One p for each observation (cam and time)
+        logit(p[k]) <- b0.p
+    }
+   
+   
+    for (k in 1:nObs){      
+        # State of the site
+        mu1[k] <- psi[site[k]]
+        z[k] ~ dbern(mu1[k])
+    
+        # State of the camera ( cam occ | plot occupied)
+        mu2[k] <- theta[cam[k]] * z[k]
+        zz[k] ~ dbern(mu2[k])
+
+        # Observation (detected|cam occupied)
+        mu3[k] <- p[k] * zz[k]
+        y[k] ~ dbern(mu3[k])
+    }
+    
+    # Likelihood
+    # for ( i in 1:nSite){ # One psi for each plot
+        # mu1 <- psi
+        # z ~ dbern(mu1)
+    # }
+    # for(j in 1:nCam){ # One theta for each camera
+        # mu2[j] <- theta[j] * z[]
+        # zz[j] ~ dbern(mu2[j])
+    # }
+        
+    # for (k in 1:nObs){      
+        # # This doesn't work because you're overwriting the lefthand side
+        # # State of the site
+        # mu1[site[k]] <- psi[site[k]]
+        # z[site[k]] ~ dbern(mu1[site[k]])
+    
+        # # State of the camera ( cam occ | plot occupied) # Everything length 149
+        # mu2[cam[k]] <- theta[cam[k]] * z[site[k]]
+        # zz[cam[k]] ~ dbern(mu2[cam[k]])
+
+        # # Observation (detected|cam occupied) # Everything length 4232
+        # mu3[k] <- p[k] * zz[cam[k]]
+        # y[k] ~ dbern(mu3[k])
+    # }
+    
+}

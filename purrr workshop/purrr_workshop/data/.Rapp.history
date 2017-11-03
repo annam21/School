@@ -1,0 +1,2 @@
+load("/Users/annamoeller/Dropbox/Workshops/purrr_workshop/data/swapi.rda")
+load("/Users/annamoeller/Documents/GitHub/School/purrr workshop/purrr_workshop/data/planet_lookup.rda")

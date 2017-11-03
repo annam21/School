@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "  # purrr workshop webinar - Charlotte Wickham\n  # Anna Moeller\n  # 11/1/2017\n  \n  library(tidyverse)\n  load(\"data/swapi.rda\")\n  \n  # What IS the difference between people[[1]] and people[1]?\n  # [[1]] return the stuff in the first element\n  # [1] return a list with 1 element, whose contents are the stuff in the first element\n  \n  # map(.x, .f)\n  # for each element of .x, do .f\n  \n  # ex. 1: How many startships has each person been in?\n  luke <- people[[1]]\n  length(luke$starships)\n  \n  # Use ~ for the formula, and use .x as the placeholder meaning \"for each element\"\n  map(people, ~length(.x$starships))\n  map(people, ~length(.x[[\"starships\"]])) \n  \n  # Ex. 2. Find the home planet of each character, using planet_lookup\n  load(\"data/planet_lookup.rda\")\n  # For Luke\n  planet_lookup[luke$homeworld == names(planet_lookup)] # My way\n  planet_lookup[luke$homeworld] # Prettier way since it's a named vector\n  # For all\n  map(people, ~planet_lookup[.x$homeworld])\n  \n  # map always returns a list\n  # map_lgl, map_dbl, map_chr, map_int return vectors\n  # walk() used when you don't want anything returned, but want to plot/save, etc. \n  \n  # Name each element of people\n  people <- people %>%\n    set_names(map_chr(., \"name\"))\n  \n  # ex. 3\n  # How many starships has each character been in?\n  map_int(people, ~ length(.x[[\"starships\"]])) %>% # integer because counting\n    hist() # cool piping\n  # What color is each character's hair?\n  map_chr(people, ~ .x[[\"hair_color\"]])\n  # Is the character male?\n  map_lgl(people, ~ .x[[\"gender\"]] == \"male\")\n  # How heavy is each character? should be int but there are \"unknown\"s\n  map_chr(people, ~ .x[[\"mass\"]]) %>%\n    readr::parse_number(na = \"unknown\")\n  \n  # .f can be a string\n  # All equivalent\n  map(people, ~.x$starships) \n  map(people, ~.x[[\"starships\"]]) \n  map(people, \"starships\") # No tilde\n  \n  # .f can be an integer\n  map(people, ~.x[[5]])\n  map(people, 5) # Gives the 5th element of each person's list\n\n  # .f can be a function (just like lapply)\n  map_int(people, length, ...) # If there were additional arguments to length()\n  map_int(people, length(.x, ...)) \n  \n  # Stopped at 65:06\n  ",
+    "created" : 1509563551824.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2786988820",
+    "id" : "42E5D3DD",
+    "lastKnownWriteTime" : 1509568528,
+    "last_content_update" : 1509568528775,
+    "path" : "~/Documents/GitHub/School/purrr workshop/purrr workshop Anna.R",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

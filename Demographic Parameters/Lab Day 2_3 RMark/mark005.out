@@ -1,0 +1,197 @@
+
+   Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+   gfortran(Win64) Vers. 8.1 Mar 2016   18-Oct-2017 13:50:29    Page  001
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+   This version was compiled by GCC version 5.3.0 using the options: 
+     -cpp -iprefix c:\tdm-gcc-64\gcc\bin\../lib/gcc/x86_64-w64-mingw32/5.3.0/ -D_MT
+     -U_REENTRANT -D IEEE -m64 -mtune=generic -march=x86-64 -mthreads -O2
+     -fimplicit-none -fbounds-check -funroll-loops -ftree-vectorize
+     -ffpe-summary=invalid,zero,overflow,underflow -fno-unsafe-math-optimizations
+     -frounding-math -fsignaling-nans -fopenmp.
+
+   This problem will use 7 of 8 possible threads.
+
+
+  INPUT --- proc title ;
+
+     CPU Time in seconds for last procedure was 0.00
+
+
+  INPUT --- proc chmatrix occasions= 7 groups= 2 etype= Live ICMeans 
+  INPUT --- NoHist hist= 55 ;
+
+  INPUT ---    time  interval 1 1 1 1 1 1 ;
+
+  INPUT ---    glabel(1)=sexFemale;
+
+  INPUT ---    glabel(2)=sexMale;
+
+   * *  WARNING  * *   At least a pair of the encounter histories are duplicates. 
+
+      Number of unique encounter histories read was 32.
+
+      Number of individual covariates read was 0.
+      Time interval lengths are all equal to 1.
+
+      Data type number is 1
+      Data type is Live Recaptures (CJS)                                                                               
+
+     CPU Time in seconds for last procedure was 0.00
+
+  Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+   gfortran(Win64) Vers. 8.1 Mar 2016   18-Oct-2017 13:50:29    Page  002
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+
+
+  INPUT --- proc estimate link=Logit NOLOOP varest=2ndPart    ;
+
+
+  INPUT --- model={ Phi(~1)p(~time) };
+
+  INPUT ---    group=1 Phi    rows=6 cols=6 Triang ;
+  INPUT ---        1 1 1 1 1 1 ;
+  INPUT ---        1 1 1 1 1 ;
+  INPUT ---        1 1 1 1 ;
+  INPUT ---        1 1 1 ;
+  INPUT ---        1 1 ;
+  INPUT ---        1 ;
+
+  INPUT ---    group=2 Phi    rows=6 cols=6 Triang ;
+  INPUT ---        1 1 1 1 1 1 ;
+  INPUT ---        1 1 1 1 1 ;
+  INPUT ---        1 1 1 1 ;
+  INPUT ---        1 1 1 ;
+  INPUT ---        1 1 ;
+  INPUT ---        1 ;
+
+  INPUT ---    group=1 p    rows=6 cols=6 Triang ;
+  INPUT ---        2 3 4 5 6 7 ;
+  INPUT ---        3 4 5 6 7 ;
+  INPUT ---        4 5 6 7 ;
+  INPUT ---        5 6 7 ;
+  INPUT ---        6 7 ;
+  INPUT ---        7 ;
+
+  INPUT ---    group=2 p    rows=6 cols=6 Triang ;
+  INPUT ---        2 3 4 5 6 7 ;
+  INPUT ---        3 4 5 6 7 ;
+  INPUT ---        4 5 6 7 ;
+  INPUT ---        5 6 7 ;
+  INPUT ---        6 7 ;
+  INPUT ---        7 ;
+
+  INPUT ---    design matrix constraints=7 covariates=7;
+  INPUT ---        1 0 0 0 0 0 0;
+  INPUT ---        0 1 0 0 0 0 0;
+  INPUT ---        0 1 1 0 0 0 0;
+  INPUT ---        0 1 0 1 0 0 0;
+  INPUT ---        0 1 0 0 1 0 0;
+  INPUT ---        0 1 0 0 0 1 0;
+
+  Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+   gfortran(Win64) Vers. 8.1 Mar 2016   18-Oct-2017 13:50:29    Page  003
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+  INPUT ---        0 1 0 0 0 0 1;
+  INPUT ---       blabel(1)=Phi:(Intercept);
+  INPUT ---       blabel(2)=p:(Intercept);
+  INPUT ---       blabel(3)=p:time3;
+  INPUT ---       blabel(4)=p:time4;
+  INPUT ---       blabel(5)=p:time5;
+  INPUT ---       blabel(6)=p:time6;
+  INPUT ---       blabel(7)=p:time7;
+  INPUT ---       rlabel(1)=Phi gFemale c1 a0 t1;
+  INPUT ---       rlabel(2)=p gFemale c1 a1 t2;
+  INPUT ---       rlabel(3)=p gFemale c1 a2 t3;
+  INPUT ---       rlabel(4)=p gFemale c1 a3 t4;
+  INPUT ---       rlabel(5)=p gFemale c1 a4 t5;
+  INPUT ---       rlabel(6)=p gFemale c1 a5 t6;
+  INPUT ---       rlabel(7)=p gFemale c1 a6 t7;
+
+ Link Function Used is LOGIT        
+
+ Variance Estimation Procedure Used is 2ndPart 
+ -2logL(saturated) = 582.47711     
+ Effective Sample Size = 426
+
+ Number of function evaluations was 28 for 7 parameters.
+ Time for numerical optimization was 0.01 seconds.
+ -2logL { Phi(~1)p(~time) } = 664.48017     
+ Penalty { Phi(~1)p(~time) } = -0.0000000    
+ Gradient { Phi(~1)p(~time) }:
+ -0.9371102E-05-0.4952540E-05  0.000000    -0.6884795E-05-0.5690811E-05
+   0.000000      0.000000    
+ S Vector { Phi(~1)p(~time) }:
+   106.5795      11.02879      2.715019      2.104375      1.387120    
+  0.3442032     0.1031091    
+ Time to compute number of parameters was 0.01 seconds.
+   Threshold =  0.1600000E-06     Condition index =  0.9674388E-03     New Threshold =  0.2728012    
+ New Guessimate of Estimated Parameters { Phi(~1)p(~time) } = 1          
+ Conditioned S Vector { Phi(~1)p(~time) }:
+   1.000000     0.1034795     0.2547412E-01 0.1974465E-01 0.1301488E-01
+  0.3229544E-02 0.9674388E-03
+ Number of Estimated Parameters { Phi(~1)p(~time) } = 7          
+ DEVIANCE { Phi(~1)p(~time) } = 82.003060                     
+ DEVIANCE Degrees of Freedom { Phi(~1)p(~time) } = 34            
+ c-hat { Phi(~1)p(~time) } = 2.4118547                     
+ AIC { Phi(~1)p(~time) } = 678.48017                  
+ AICc { Phi(~1)p(~time) } = 678.74811                    
+ BIC { Phi(~1)p(~time) } = 706.86125                    
+ Pearson Chisquare { Phi(~1)p(~time) } = 219.26530                  
+ Possible Encounter Histories { Phi(~1)p(~time) } = 252             
+ Pearson Chisquare df { Phi(~1)p(~time) } = 233        
+ Pearson chat { Phi(~1)p(~time) } = 0.9410528                  
+ Sum(Observed/Expected) { Phi(~1)p(~time) } = 244.47296                  
+ Fletcher chat { Phi(~1)p(~time) } = 0.9700267                  
+
+
+                     LOGIT Link Function Parameters of { Phi(~1)p(~time) }
+                                                              95% Confidence Interval
+ Parameter                    Beta         Standard Error      Lower           Upper
+ -------------------------  --------------  --------------  --------------  --------------
+    1:Phi:(Intercept)       0.2131640       0.1121135       -0.0065784      0.4329064     
+    2:p:(Intercept)         1.2955260       0.7437237       -0.1621725      2.7532246     
+    3:p:time3               0.8005271       1.1635478       -1.4800267      3.0810809     
+    4:p:time4               0.6512741       1.0018578       -1.3123671      2.6149154     
+    5:p:time5               0.9977266       0.9454482       -0.8553520      2.8508052     
+
+  Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+   gfortran(Win64) Vers. 8.1 Mar 2016   18-Oct-2017 13:50:29    Page  004
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+    6:p:time6               1.4658860       1.0304001       -0.5536982      3.4854703     
+    7:p:time7               1.9900738       3.0642067       -4.0157715      7.9959191     
+
+
+                     Real Function Parameters of { Phi(~1)p(~time) }
+                                                               95% Confidence Interval
+  Parameter                  Estimate       Standard Error      Lower           Upper
+ --------------------------  --------------  --------------  --------------  --------------
+     1:Phi gFemale c1 a0 t1  0.5530901       0.0277124       0.4983554       0.6065675                           
+     2:p gFemale c1 a1 t2    0.7850811       0.1254876       0.4595455       0.9400952                           
+     3:p gFemale c1 a2 t3    0.8905190       0.0893631       0.5743280       0.9800148                           
+     4:p gFemale c1 a3 t4    0.8750973       0.0738631       0.6507392       0.9634314                           
+     5:p gFemale c1 a4 t5    0.9083167       0.0487385       0.7588076       0.9689421                           
+     6:p gFemale c1 a5 t6    0.9405546       0.0399994       0.7956326       0.9846868                           
+     7:p gFemale c1 a6 t7    0.9639315       0.1037359       0.0715947       0.9998920                           
+
+     CPU Time in seconds for last procedure was 0.02
+
+  Program  MARK  - Survival Rate Estimation with Capture-Recapture Data
+   gfortran(Win64) Vers. 8.1 Mar 2016   18-Oct-2017 13:50:29    Page  005
+ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ 
+
+
+  INPUT --- proc stop;
+
+     CPU Time in minutes for this job was 0.00
+
+     Time Start = 13:50:29.454   Time End = 13:50:29.485
+
+     Wall Clock Time in minutes for this job was 0.00
+
+
+          E X E C U T I O N   S U C C E S S F U L 

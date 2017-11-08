@@ -5,14 +5,14 @@
   library(tidyverse)
   load("data/swapi.rda")
   
-  # What IS the difference between people[[1]] and people[1]?
+  # What is the difference between people[[1]] and people[1]?
   # [[1]] return the stuff in the first element
   # [1] return a list with 1 element, whose contents are the stuff in the first element
   
   # map(.x, .f)
   # for each element of .x, do .f
   
-  # ex. 1: How many startships has each person been in?
+  # ex. 1: How many starships has each person been in?
   luke <- people[[1]]
   length(luke$starships)
   
@@ -63,4 +63,22 @@
   map_int(people, length(.x, ...)) 
   
   # Stopped at 65:06
+  
+  # Second day. See if I remember anything
+  
+  # Which film has the most characters?
+  # 1.
+  numppl <- map_int(films, ~length(.x$characters))
+  # 2. 
+  numppl <- map(films, ~.x$characters) %>%
+    map_int(length)
+  films[[which(numppl == max(numppl))]]$title
+  # Go further
+  map(films, "characters") %>%
+    map_int(length) %>%
+    set_names(map(films, "title")) %>%
+    sort(decreasing = T)
+
+  # Stopped again at 76:15
+
   

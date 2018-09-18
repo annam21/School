@@ -1,0 +1,28 @@
+---
+title: "Homework 2"
+author: "Anna Moeller"
+date: "9/18/2018"
+output: pdf_document
+---
+
+# Simulations
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Sec 1.8 Problem 8
+
+```{r}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.

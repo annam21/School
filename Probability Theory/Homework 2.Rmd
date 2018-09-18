@@ -2,7 +2,7 @@
 title: "Homework 2"
 author: "Anna Moeller"
 date: "9/18/2018"
-output: pdf_document
+output: word_document
 ---
 
 # Simulations
@@ -35,4 +35,32 @@ Check that this answer is similar to the calculated probability
 (choose(33, 23) + choose(33, 8))/choose(35, 10)
 ```
 
-## Sec. 1.10 Problem 6
+## Sec. 1.10 Problem 1
+
+```{r}
+cards <- c(rep(1, 4), rep(0, 48))
+nsim <- 1000000
+
+out <- rep(NA, nsim)
+for(i in 1:nsim){
+  # Deal 5 cards to each of 3 people
+  deal <- sample(cards, 15)
+  # How many aces did each person get? 
+  
+  A <- sum(deal[1:5])
+  B <- sum(deal[6:10])
+  C <- sum(deal[11:15])
+  
+  out[i] <- A == 2 | B == 2 | C == 2
+}
+
+# Estimated probability 
+sum(out)/ length(out)
+```
+
+Check that it's close to the estimated probability
+```{r}
+3 * choose(4, 2) * choose(48, 3) / choose(52, 5) - 
+  3 * choose(5, 2) * choose(5, 2) / choose(52, 4)
+
+```

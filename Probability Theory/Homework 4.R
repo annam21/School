@@ -50,8 +50,9 @@
       # Draw three integers from 1:n without replacement
       draw <- sample(1:n, 3)
       
-      # Are any two consecutive? 
-      out[i] <- 1 %in% diff(draw)
+      # Are any two consecutive? (drew without regard to order, so arrange them!)
+      draw <- draw[order(draw)]
+      out[i] <- any(diff(draw) == 1)
     }
     
     # Estimated probability 
@@ -65,10 +66,16 @@
   sim(nsim = 100000, n = 5)
   sim(nsim = 100000, n = 20)
 
-  # Compare to calculated probability with n = 9
-  8/9 * 1/8 + 
-    7/9 * 1/8 * 1/7 + 
-    1/9 * 7/8 * 1/7 + 
-    1/9 * 6/8 * 1/7 + 
-    6/9 * 5/8 * 1/7 + 
-    1/9 * 6/8 * 1/7
+
+  # Compare to calculated probability
+  calc <- function(n){
+    i <- 4:(n-1)
+    t <- (n-i)*(n-i+1)/2
+    pr <- 1 - (sum(t)/choose(n, 3))
+    return(pr)
+  } 
+  
+  calc(n = 9)
+  calc(n = 5)  
+  calc(n = 20)
+  

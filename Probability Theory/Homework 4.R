@@ -76,8 +76,10 @@
   sim(nsim = 100000, n = 9)
   
   # Part b
-  sim(nsim = 10000, n = 5)
-  sim(nsim = 10000, n = 20)
+  sim(nsim = 100000, n = 5)
+  2/5
+  sim(nsim = 100000, n = 20)
+  2/20
 
   # Calculated probability with n = 9
   8/9 * 1/8 + 
@@ -86,4 +88,6 @@
     1/9 * 6/8 * 1/7 + 
     6/9 * 5/8 * 1/7 + 
     1/9 * 6/8 * 1/7
+  # Wow. Same as:
+  2/9
   

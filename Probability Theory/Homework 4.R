@@ -19,33 +19,19 @@
   row.names(pr_success) <- c("Forest", "Mountains", "Plains")
    
   for(i in 1:5){ 
-    # Where do we search? 
-    # If two probabilities are the same, randomly pick one. 
-    test <- which(pr_success[, i] == max(pr_success[, i]))
-    if(length(test) > 1){
-      search[i] <- sample(test, 1)
-    } else if(length(test) == 1){
-      search[i] <- test
-    }
-    
-    # Probability that the search failed
-    pr_failed <- 1 - pr_success[search[i], i]
-    
-    # Posterior probability of being in region given failed search
-    for(j in 1:3){
-      if(j == search[i]){
-        pr_region[j, i + 1] <- pr_region[j, i] * (1 - pr_success_g_its_there[j]) * 
-          pr_region[j, i] / pr_failed
-      } else {
-        pr_region[j, i+1] <- pr_region[j, i]/pr_failed
-      }
-    }
-    
-    # Probability of finding plane
-    pr_success <- pr_success_g_its_there * pr_region
+    search[i] <- which(pr_success[, i] == max(pr_success[, i]))
+   
+    # We know the search failed. So calculate posterior probability that it's in each region
+    pr_region[, i+1] <- pr_region[, i] * (1-pr_success_g_its_there) /
+      sum(pr_region[, i] * (1-pr_success_g_its_there))
+     
+    # What is the new probability of success (given updated prob of each region)? 
+    pr_success[, i+1] <- pr_region[, i+1] * pr_success_g_its_there
   }
   
-  # Display 
+  #####################
+  # Display results
+  
   # Probability of plane being in each region
   pr_region
   
@@ -64,8 +50,9 @@
       # Draw three integers from 1:n without replacement
       draw <- sample(1:n, 3)
       
-      # Are any two consecutive? 
-      out[i] <- 1 %in% diff(draw)
+      # Are any two consecutive? (drew without regard to order, so arrange them!)
+      draw <- draw[order(draw)]
+      out[i] <- any(diff(draw) == 1)
     }
     
     # Estimated probability 
@@ -77,17 +64,18 @@
   
   # Part b
   sim(nsim = 100000, n = 5)
-  2/5
-  sim(nsim = 100000, n = 20)
-  2/20
 
-  # Calculated probability with n = 9
-  8/9 * 1/8 + 
-    7/9 * 1/8 * 1/7 + 
-    1/9 * 7/8 * 1/7 + 
-    1/9 * 6/8 * 1/7 + 
-    6/9 * 5/8 * 1/7 + 
-    1/9 * 6/8 * 1/7
-  # Wow. Same as:
-  2/9
+  sim(nsim = 100000, n = 20)
+
+  # Compare to calculated probability
+  calc <- function(n){
+    i <- 4:(n-1)
+    t <- (n-i)*(n-i+1)/2 
+    pr <- 1 - (sum(t)/choose(n, 3))
+    return(pr)
+  } 
+  
+  calc(n = 9)
+  calc(n = 5)  
+  calc(n = 20)
   

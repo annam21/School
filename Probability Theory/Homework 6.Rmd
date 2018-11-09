@@ -1,0 +1,42 @@
+---
+title: "Homework 6"
+author: "Anna Moeller"
+date: "October 28, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##  Additional problem #2
+### Part a. Marginal distribution of x
+```{r}
+  n <- 1000000
+  N <- sample(0:3, n, prob = c(.15, .2,.5, .15), replace = T)
+  X <- rbinom(n, size = N, prob = 0.5)
+  
+  # marginal of X
+  length(which(X == 0))/n
+  length(which(X == 1))/n
+  length(which(X == 2))/n
+  length(which(X == 3))/n
+```
+
+### Part b. Conditional distribution of N given X = 0
+```{r}
+  condit <- N[X==0]
+  length(which(condit == 0))/length(condit)
+  length(which(condit == 1))/length(condit)
+  length(which(condit == 2))/length(condit)
+  length(which(condit == 3))/length(condit)
+```
+s
+## Problem 3. Pseudo-random X
+```{r}
+  
+  Y <- runif(n)
+  X <- sqrt(4*Y)
+  hist(X, freq = F, breaks = 100)
+  curve(x/2, col = "red", lwd = 2, add = T)  
+```

@@ -1,0 +1,22 @@
+# Class exponential model
+
+model{
+
+	# Priors
+	beta0 ~ dnorm(0, 0.001)
+
+	# Link functions
+	lambda <- exp(beta0)
+
+	# Likelihood
+	for(i in 1:nr){
+		for(j in 1:nc){
+			toevent[i, j] ~ dexp(lambda)
+			is.censored[i, j] ~ dinterval(toevent[i, j], censor)
+		}
+	}
+	
+	# Derive N
+	N <- lambda * A
+	
+}

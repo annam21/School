@@ -1,0 +1,20 @@
+  # JAGS model for exponential likelihood
+  
+  model {
+    # priors
+    beta0 ~ dnorm(0, 0.001)
+    
+    # Log link
+    lambda <- exp(beta0)
+    
+    # Likelihood
+    for(i in 1:nrows) { 
+      for(j in 1:ncols){
+        is.censored[i, j] ~ dinterval(toevent[i, j], censor)
+        toevent[i, j] ~ dexp(lambda)
+      }
+    } 
+    
+    # Derive N
+    N <- lambda * A	
+  } 

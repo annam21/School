@@ -10,10 +10,10 @@
 ################
   # Prepare data
   
-  setwd("C:/Users/anna.moeller/Documents/GitHub/School/Demographic Parameters/Lab Day 4 Bayesian CJS")
+  # setwd("C:/Users/anna.moeller/Documents/GitHub/School/Demographic Parameters/Lab Day 4 Bayesian CJS")
   
   # read data file 
-  dipper <- read.csv( "Dipper.csv" )
+  dipper <- read.csv( "Demographic Parameters/Lab Day 4 Bayesian CJS/Dipper.csv" )
   
   # Subset data to make encounter history matrix
   EH <- as.matrix(dipper[, 1:7])
@@ -101,7 +101,7 @@
   phidot_pdot_res <- jags( cjs.data, 
                       cjs.inits,
                       cjs.params,
-                      "cjs_phidot_pdot.txt",
+                      "Demographic Parameters/Lab Day 4 Bayesian CJS/cjs_phidot_pdot.txt",
                       n.chains=nc, 
                       n.iter=ni, 
                       n.burnin=nb,
@@ -130,7 +130,7 @@
   phitime_ptime_res <- jags( cjs.data, 
                       cjs.inits,
                       cjs.params,
-                      "cjs_phitime_ptime.txt",
+                      "Demographic Parameters/Lab Day 4 Bayesian CJS/cjs_phitime_ptime.txt",
                       n.chains=nc, 
                       n.iter=ni, 
                       n.burnin=nb,

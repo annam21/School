@@ -64,13 +64,13 @@
   
   # Part b
   sim(nsim = 100000, n = 5)
-  sim(nsim = 100000, n = 20)
 
+  sim(nsim = 100000, n = 20)
 
   # Compare to calculated probability
   calc <- function(n){
     i <- 4:(n-1)
-    t <- (n-i)*(n-i+1)/2
+    t <- (n-i)*(n-i+1)/2 
     pr <- 1 - (sum(t)/choose(n, 3))
     return(pr)
   } 

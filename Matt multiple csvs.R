@@ -6,7 +6,7 @@
 library(tidyverse)
 
 # All the file paths (full path)
-filepaths <- list.files() # fill in here
+filepaths <- list.files(, full.names = T) # fill in here
 
 # Pull in all the csvs into a tibble
   dat <- tibble(File = filepaths) %>%

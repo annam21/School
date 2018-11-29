@@ -1,0 +1,32 @@
+---
+title: "Homework 7"
+author: "Anna Moeller"
+date: "November 9, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Additional problems 
+#### # 1
+```{r}
+  n <- 1000000
+  X <- rexp(n, 1)
+  Y <- rexp(n, 1)
+  U <- X/(X + Y)
+  hist(U, freq = F)
+  abline(h = 1, col = "red")
+```
+
+#### #3
+```{r}
+  n <- 1000000
+  X <- runif(n)
+  Y <- runif(n)
+  Z <- X/(X-Y)
+  hist(Z, breaks = 1000000, xlim = c(-50, 50), freq = F)
+  curve(1/(2*x^2), add = T, col = "red")
+  
+```

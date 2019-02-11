@@ -1,0 +1,17 @@
+---
+title: "Homework 3"
+author: "Anna Moeller"
+date: "February 6, 2019"
+output: html_document
+---
+
+### Section 6.2 Problem 6
+```{r}
+# Prior
+curve(dunif(x, 0, 1), lty = 2, ylab = "pdf of theta", ylim = c(0, 3))
+
+# Posterior
+post <- function(x) 504*x^3*(1-x)^5
+curve(post, add = T)
+
+```

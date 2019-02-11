@@ -8,10 +8,73 @@ output: html_document
 ### Section 6.2 Problem 6
 ```{r}
 # Prior
-curve(dunif(x, 0, 1), lty = 2, ylab = "pdf of theta", ylim = c(0, 3))
+curve(dunif(x, 0, 1), lty = 2, ylab = "pdf of theta", xlab = "theta", ylim = c(0, 3))
 
 # Posterior
-post <- function(x) 504*x^3*(1-x)^5
-curve(post, add = T)
+curve(dbeta(x, 4, 6), add = T)
+
+legend("topright", legend = c("prior", "posterior"), lty = c(2, 1))
+
+```
+
+### Section 6.3 Problem 12
+```{r}
+# Prior
+curve(dgamma(x, 0.04, 0.2), lty = 2, ylab = "pdf of theta", xlab = "theta")
+
+# Posterior
+curve(dgamma(x, 0.04, 4), add = T)
+
+legend("topright", legend = c("prior", "posterior"), lty = c(2, 1))
+```
+
+### Additional Problems
+#### Problem 1 part b
+```{r}
+# Pick a theta
+theta <- 0.5
+
+# Simulation number
+nsim <- 100000
+
+# Sample sizes
+n <- c(2, 5, 10, 50)
+
+# Generate sample means
+sim_fn <- function(n, theta) {
+  replicate(nsim, mean(rexp(n, 1/theta)))
+}
+xbar <- lapply(n, sim_fn, theta = theta)
+
+# Illustrate CLT
+par(mfrow = c(2, 2))
+for(i in 1:length(xbar)){
+  hist(xbar[[i]],
+       col = "lightgray", 
+       border = "lightgray", 
+       breaks = 50, 
+       freq = F, 
+       xlab = NULL,
+       main = paste("n =", n[i]) 
+  )
+  curve(dnorm(x, theta, sd = sqrt(theta^2/n[i])), add = T, col = "red")
+}
+
+```
+
+Sample size n = 10 looks close to a normal distribution. By n = 50 it appears to be very close.
+
+#### Problem 1 part c
+```{r}
+n <- 100
+xbar <- replicate(nsim, mean(rexp(n, 1/theta)))
+par(mfrow = c(1, 1))
+hist(log(xbar), 
+     col = "lightgray", 
+     border = "lightgray", 
+     breaks = 50, 
+     freq = F, 
+     xlab = NULL)
+curve(dnorm(x, log(theta), sqrt(1/n)), add = T, col = "red")
 
 ```

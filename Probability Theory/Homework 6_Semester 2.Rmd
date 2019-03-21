@@ -1,6 +1,18 @@
+---
+title: "Homework 6_Semester 2"
+author: "Anna Moeller"
+date: "3/21/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
 # Additional Problems
 
-### Problem 1
+## Problem 1
+```{r}
 n <- c(10, 50, 500)
 sumX <- c(6.1, 27.3, 262.4)
 
@@ -14,7 +26,12 @@ c2 <- qgamma(.025, n, 1)
 LCI <- c2/sumX
 UCI <- c1/sumX
 
-# Plot them
+# Compare them
+t <- as.data.frame(rbind(LCRI, UCRI, LCI, UCI))
+names(t) <- n
+t
+
+# Plot them for fun
 plot(1, type="n", xlab="n", ylab="", xlim=c(0, 4), ylim=c(0, 5), xaxt = "n")
 axis(1, at = seq(1.1, 3.1), labels = n)
 segments(c(1,2,3), LCI, c(1,2,3), UCI)
@@ -24,9 +41,11 @@ legend("topright",
        lty = 1,
        col = c("black", "red")
        ) 
+```
 
 ## Problem 3
 ### Part h
+```{r}
 n <- 1:20
 theta <- 1
 
@@ -39,13 +58,14 @@ theta_hat_U_MSE <- theta^2/n/(n+2)
 theta_tilde_MSE <- theta^2/3/n
 
 # Plot the MSEs
-curve(th)
 plot(n, theta_hat_MSE, type = "l", lty = 1, ylab = "MSE")
 lines(n, theta_hat_U_MSE, type = "l", lty = 2)
 lines(n, theta_tilde_MSE, type = "l", lty = 3)
 legend("topright", legend = c("theta_hat", "theta_hat_U", "theta_tilde"), lty = c(1,2,3))
+```
 
-#### Part i
+### Part i
+```{r}
 theta <- 1
 n <- c(5, 10, 20)
 nsim <- 1e6
@@ -88,3 +108,4 @@ t <- as.data.frame(
 )
 names(t) <- n
 t
+```

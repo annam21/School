@@ -2,7 +2,7 @@
 title: "Homework 6_Semester 2"
 author: "Anna Moeller"
 date: "3/21/2019"
-output: html_document
+output: word_document
 ---
 
 ```{r setup, include=FALSE}
@@ -30,6 +30,8 @@ UCI <- c1/sumX
 t <- as.data.frame(rbind(LCRI, UCRI, LCI, UCI))
 names(t) <- n
 t
+```
+```{r, echo = F}
 
 # Plot them for fun
 plot(1, type="n", xlab="n", ylab="", xlim=c(0, 4), ylim=c(0, 5), xaxt = "n")

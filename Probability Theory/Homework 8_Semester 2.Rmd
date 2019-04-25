@@ -1,0 +1,127 @@
+---
+title: "Homework 8"
+author: "Anna Moeller"
+date: "April 24, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(boot)
+library(Sleuth3)
+```
+
+# Problem 2
+```{r}
+# Mean salamanders per plot
+mn <- function(d, i) mean(d$Salamanders[i])
+b_mn <- boot(case2202, mn, 1e5)
+boot.ci(b_mn)
+plot(b_mn)
+
+# Correlation between forest age and salamanders
+correl <- function(d, i) cor(d$ForestAge[i], d$Salamanders[i])
+b_correl <- boot(case2202, correl, 1e5)
+boot.ci(b_correl)
+plot(b_correl)
+
+```
+For both analyses, the plots look approximately normal, and the percentile and normal confidence intervals are similar. Therefore, the distribution is approximately normal, and I would use the normal confidence interval. 
+
+# Problem 3
+```{r}
+
+# Function to calculate coverage for one confidence interval
+cover_fn <- function(x, n, truth){
+  m <- mean(x)
+  sig_prime <- sd(x)
+  c <- qt(0.975, n - 1)
+  d <- c * sig_prime/sqrt(n)
+  LCI <- m - d
+  UCI <- m + d
+  cover <- LCI <= truth & truth <= UCI
+  return(cover)
+}
+
+# Calculate coverage for nsim CIs with under one n
+coverage_wrapper_one_n <- function(X, n, truth){
+  cover <- purrr::map_lgl(X, ~cover_fn(.x, n, truth) )
+  # Coverage
+  coverage <- mean(cover)
+  return(coverage)
+}
+norm_one_n <- function(nsim, n, true_mu) {
+  X <- purrr::rerun(nsim, rnorm(n, true_mu, 2)) 
+  coverage_wrapper_one_n(X, n, true_mu)
+}
+t_one_n <- function(nsim, n, truth) {
+  X <- purrr::rerun(nsim, rt(n, 3))
+  coverage_wrapper_one_n(X, n, truth)
+}
+exp_one_n <- function(nsim, n, truth) {
+  X <- purrr::rerun(nsim, rexp(n, 1))
+  coverage_wrapper_one_n(X, n, truth)
+}
+
+# Run over multiple n
+nsim <- 100000
+n <- c(10, 25, 100)
+```
+Normal distribution
+```{r}
+purrr::map_dbl(n, ~norm_one_n(nsim, .x, true_mu = 5))
+```
+
+T-distribution
+```{r}
+purrr::map_dbl(n, ~t_one_n(nsim, .x, truth = 0))
+```
+
+Exponential distribution
+```{r}
+purrr::map_dbl(n, ~exp_one_n(nsim, .x, truth = 1))
+```
+
+Confidence interval coverage was accurate for both the normal and t-distributions for all n. 
+For the exponential distribution, coverage was accurage with larger n (n = 100). 
+
+# Problem 4
+```{r}
+# write a new cover_fn for variance
+cover_fn <- function(x, n, truth){
+  c1 <- qchisq(.05/2, df = n-1)
+  c2 <- qchisq(1-.05/2, df = n-1)
+  xbar <- mean(x)
+  top <- sum((x - xbar)^2)
+  LCI <- top/c2
+  UCI <- top/c1
+  # Coverage for this CI
+  cover <- LCI <= truth & truth <= UCI
+  return(cover)
+}
+
+# Only need to rewrite normal because others don't depend on parameter to simulate
+norm_one_n <- function(nsim, n, true_var) {
+  X <- purrr::rerun(nsim, rnorm(n, 1, sqrt(true_var)) )
+  coverage_wrapper_one_n(X, n, true_var)
+}
+
+# Run over multiple n
+
+```
+Normal distribution
+```{r}
+purrr::map_dbl(n, ~norm_one_n(nsim, .x, true_var = 5))
+```
+
+T-distribution
+```{r}
+purrr::map_dbl(n, ~t_one_n(nsim, .x, truth = 3))
+```
+
+Exponential distribution
+```{r}
+purrr::map_dbl(n, ~exp_one_n(nsim, .x, truth = 1))
+```
+
+This confidence interval appears to be very sensitive to violations of normality. For non-normal distributions, coverage is very low at all sample sizes. 
